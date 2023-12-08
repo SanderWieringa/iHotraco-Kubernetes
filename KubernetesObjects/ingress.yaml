@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: remoteconnector-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: "nginx"
+  rules: 
+  - host: nginx.example.com
+    http:
+      paths:
+      - path: /api/v1/(info/remoteconnector)
+        pathType: ImplementationSpecific
+        backend: 
+          service: 
+            name: remoteconnector-depl
+            port: 
+              number: 8453
+      - path: /api/v1/(login|logout|refresh|user|users|claim-device|subscriptions|register|forgot-password|reset-password|info/identitymanager|payments)
+        pathType: ImplementationSpecific
+        backend: 
+          service: 
+            name: identitymanager-depl
+            port: 
+              number: 8451
+      - path: /api/v1/(data|info/controllerdataprovider)
+        pathType: ImplementationSpecific
+        backend: 
+          service: 
+            name: controllerdataprovider-depl
+            port: 
+              number: 8452
+      - path: /api/v1/(devices|push|info/devicegateway)
+        pathType: ImplementationSpecific
+        backend: 
+          service: 
+            name: devicegateway-depl
+            port: 
+              number: 8449

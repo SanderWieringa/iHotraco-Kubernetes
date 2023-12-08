@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: remoteconnector-depl
+spec:
+  ports:
+  - port: 8453
+    targetPort: 8453
+  selector:
+    io.kompose.service: remoteconnector
+  type: ClusterIP
+status:
+  loadBalancer: {}

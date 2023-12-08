@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cassandra-depl
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: cassandraservice
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: cassandraservice
+    spec:
+      containers:
+      - env:
+        - name: CASSANDRA_CFG_ENV_HEAP_NEWSIZE
+          valueFrom:
+            configMapKeyRef:
+              key: CASSANDRA_CFG_ENV_HEAP_NEWSIZE
+              name: cassandra-configmap
+        - name: CASSANDRA_CFG_ENV_MAX_HEAP_SIZE
+          valueFrom:
+            configMapKeyRef:
+              key: CASSANDRA_CFG_ENV_MAX_HEAP_SIZE
+              name: cassandra-configmap
+        - name: CASSANDRA_CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: CASSANDRA_CLUSTER_NAME
+              name: cassandra-configmap
+        - name: CASSANDRA_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              key: CASSANDRA_PASSWORD
+              name: cassandra-configmap
+        - name: CASSANDRA_PASSWORD_SEEDER
+          valueFrom:
+            configMapKeyRef:
+              key: CASSANDRA_PASSWORD_SEEDER
+              name: cassandra-configmap
+        - name: CASSANDRA_USER
+          valueFrom:
+            configMapKeyRef:
+              key: CASSANDRA_USER
+              name: cassandra-configmap
+        - name: LOCAL_JMX
+          valueFrom:
+            configMapKeyRef:
+              key: LOCAL_JMX
+              name: cassandra-configmap
+        image: bitnami/cassandra:latest
+        name: cassandra
+        ports:
+        - containerPort: 7000
+        - containerPort: 7199
+        - containerPort: 9042
+        resources: {}
+        volumeMounts:
+        - mountPath: /opt/ihotraco/cassandra-init.cql
+          name: cassandra-claim0
+        - mountPath: /etc/cassandra/jmxremote.password
+          name: cassandra-claim1
+        - mountPath: /etc/cassandra/jmxremote.access
+          name: cassandra-claim2
+        - mountPath: /bitnami
+          name: cas-container
+      restartPolicy: Always
+      volumes:
+      - name: cassandra-claim0
+        persistentVolumeClaim:
+          claimName: cassandra-claim0
+      - name: cassandra-claim1
+        persistentVolumeClaim:
+          claimName: cassandra-claim1
+      - name: cassandra-claim2
+        persistentVolumeClaim:
+          claimName: cassandra-claim2
+      - name: cas-container
+        persistentVolumeClaim:
+          claimName: cas-container
+status: {}

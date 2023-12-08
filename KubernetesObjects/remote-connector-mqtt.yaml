@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: remote-connector-mqtt
+type: Opaque
+data:
+  remote-connector-mqtt: |
+    <VALUE>
+    

@@ -1,0 +1,2 @@
+# -- Use a `DaemonSet` or `Deployment`
+  kind: DaemonSet

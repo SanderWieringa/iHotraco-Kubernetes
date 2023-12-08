@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identitymanager-depl
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: identitymanager
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: identitymanager
+    spec:
+      containers:
+      - name: identitymanager
+        image: "$(IMAGE_REPOSITORY)/identitymanager:latest"
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8451
+        volumeMounts:
+          - name: mongo-user
+            mountPath: /run/secrets/mongo-user
+            subPath: mongo-user
+          - name: mongo-user-passwd
+            mountPath: /run/secrets/mongo-user-passwd
+            subPath: mongo-user-passwd
+          - name: ixon-client-key
+            mountPath: /run/secrets/ixon-client-key
+            subPath: ixon-client-key
+          - name: super-admin-account
+            mountPath: /run/secrets/super-admin-account
+            subPath: super-admin-account
+          - name: mail-password
+            mountPath: /run/secrets/mail-password
+            subPath: mail-password
+          - name: shutdown-secret
+            mountPath: /run/secrets/shutdown-secret
+            subPath: shutdown-secret
+          - name: mollie-token
+            mountPath: /run/secrets/mollie-token
+            subPath: mollie-token
+          - name: mollie-token-dev
+            mountPath: /run/secrets/mollie-token-dev
+            subPath: mollie-token-dev
+        env:
+          - name: IMAGE_REPOSITORY
+            valueFrom:
+              configMapKeyRef:
+                key: IMAGE_REPOSITORY
+                name: ihotraco-configmap
+          - name: SPRING_DATA_MONGODB_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_DATA_MONGODB_HOST
+                name: ihotraco-configmap
+          - name: MAIL_ADDRESS_FINANCE
+            valueFrom:
+              configMapKeyRef:
+                key: finance_email
+                name: ihotraco-configmap
+          - name: MAIL_FROM_ADDRESS
+            valueFrom:
+              configMapKeyRef:
+                key: hotraco_email
+                name: ihotraco-configmap
+          - name: MAIL_FROM_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                key: mail-password
+                name: ihotraco-configmap
+          - name: MAIL_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: MAIL_HOST
+                name: ihotraco-configmap
+          - name: MAIL_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: MAIL_PORT
+                name: ihotraco-configmap
+          - name: target_url
+            valueFrom:
+              configMapKeyRef:
+                name: ihotraco-configmap
+                key: target_url
+          - name: SERVER_URL
+            value: "https://$(target_url)"
+          - name: java_profiles
+            valueFrom:
+              configMapKeyRef:
+                name: ihotraco-configmap
+                key: java_profiles
+          - name: SPRING_PROFILES_ACTIVE
+            value: "$(java_profiles)"
+        resources: 
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests: 
+              cpu: 100m
+              memory: 400Mi
+      imagePullSecrets:
+      - name: nexus-secrets
+      restartPolicy: Always
+      volumes:
+      - name: mongo-user
+        secret:
+          secretName: mongo-user
+      - name: mongo-user-passwd
+        secret:
+          secretName: mongo-user-passwd
+      - name: ixon-client-key
+        secret:
+          secretName: ixon-client-key
+      - name: super-admin-account
+        secret:
+          secretName: super-admin-account
+      - name: mail-password
+        secret:
+          secretName: mail-password
+      - name: shutdown-secret
+        secret:
+          secretName: shutdown-secret
+      - name: mollie-token
+        secret:
+          secretName: mollie-token
+      - name: mollie-token-dev
+        secret:
+          secretName: mollie-token-dev
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+status: {}

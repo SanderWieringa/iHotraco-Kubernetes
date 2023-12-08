@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-depl
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: web
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: web
+    spec:
+      imagePullSecrets:
+      - name: my-registry-secret
+      containers:
+      - image: "$(IMAGE_REPOSITORY)/web:latest"
+        name: ihotraco-web
+        ports:
+        - containerPort: 80
+        resources: {}
+        imagePullPolicy: Always
+        env:
+          - name: IMAGE_REPOSITORY
+            valueFrom:
+              configMapKeyRef:
+                key: IMAGE_REPOSITORY
+                name: ihotraco-configmap
+      restartPolicy: Always
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+status: {}

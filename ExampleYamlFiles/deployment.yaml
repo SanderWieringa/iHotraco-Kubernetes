@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identitymanager-depl
+spec:
+  selector:
+    matchLabels:
+      app: identitymanager
+  template:
+    metadata:
+      labels:
+        app: identitymanager
+    spec:
+      containers:
+      - name: identitymanager
+        image: 'localhost:5000/identitymanager:latest'
+        volumeMounts:
+          - name: mongo-user
+            mountPath: /run/secrets/mongo-user
+            subPath: mongo-user
+          - mountPath: /usr/keys
+            name: identitymanager-claim0
+        resources: 
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests: 
+              cpu: 100m
+              memory: 400Mi
+      restartPolicy: Always
+      volumes:
+      - name: mongo-user
+        secret:
+          secretName: mongo-user
+      - name: identitymanager-claim0
+        persistentVolumeClaim:
+          claimName: identitymanager-claim0

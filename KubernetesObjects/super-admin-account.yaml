@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: super-admin-account
+type: Opaque
+data:
+  super-admin-account: |
+    <VALUE>
+    

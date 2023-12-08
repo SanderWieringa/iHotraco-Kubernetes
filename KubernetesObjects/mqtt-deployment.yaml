@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-depl
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: mqtt
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: mqtt
+    spec:
+      containers:
+        - name: mqtt
+          image: "localhost:32000/hivemq/plugin:stud-joris"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 1883
+            - containerPort: 8883
+          volumeMounts:
+            - mountPath: /opt/hivemq/data
+              name: mqtt-data
+            - mountPath: /opt/hivemq/log
+              name: mqtt-logs
+            - name: mongo-user
+              mountPath: /run/secrets/mongo-user
+              subPath: mongo-user
+            - name: mongo-user-passwd
+              mountPath: /run/secrets/mongo-user-passwd
+              subPath: mongo-user-passwd
+            - name: device-gateway-mqtt
+              mountPath: /run/secrets/device-gateway-mqtt
+              subPath: device-gateway-mqtt
+            - name: remote-connector-mqtt
+              mountPath: /run/secrets/remote-connector-mqtt
+              subPath: remote-connector-mqtt
+          env:
+            - name: MONGO_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: ihotraco-configmap
+                  key: MONGO_DB
+            - name: target_url
+              valueFrom:
+                configMapKeyRef:
+                  name: ihotraco-configmap
+                  key: target_url
+            - name: MONGO_HOST
+              value: "$(target_url)"
+            - name: MONGO_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: ihotraco-configmap
+                  key: MONGO_PORT
+          resources: {}
+      imagePullSecrets:
+        - name: nexus-secrets
+      restartPolicy: Always
+      volumes:
+        - name: mqtt-data
+          persistentVolumeClaim:
+            claimName: mqtt-data
+        - name: mqtt-logs
+          persistentVolumeClaim:
+            claimName: mqtt-logs
+        - name: mongo-user
+          secret:
+            secretName: mongo-user
+        - name: mongo-user-passwd
+          secret:
+            secretName: mongo-user-passwd
+        - name: device-gateway-mqtt
+          secret:
+            secretName: device-gateway-mqtt
+        - name: remote-connector-mqtt
+          secret:
+            secretName: remote-connector-mqtt
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+status: {}

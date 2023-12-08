@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devicegateway-depl
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: devicegateway
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: devicegateway
+    spec:
+      containers:
+      - name: devicegateway
+        image: "$(IMAGE_REPOSITORY)/devicegateway:stud-joris"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8449
+        - containerPort: 8450
+        volumeMounts:
+        - name: mongo-user
+          mountPath: /run/secrets/mongo-user
+          subPath: mongo-user
+        - name: mongo-user-passwd
+          mountPath: /run/secrets/mongo-user-passwd
+          subPath: mongo-user-passwd
+        - name: cassandra-username
+          mountPath: /run/secrets/cassandra-username
+          subPath: cassandra-username
+        - name: cassandra-password
+          mountPath: /run/secrets/cassandra-password
+          subPath: cassandra-password
+        - name: shutdown-secret
+          mountPath: /run/secrets/shutdown-secret
+          subPath: shutdown-secret
+        - name: device-gateway-mqtt
+          mountPath: /run/secrets/device-gateway-mqtt
+          subPath: device-gateway-mqtt
+        env:
+          - name: IMAGE_REPOSITORY
+            valueFrom:
+              configMapKeyRef:
+                key: IMAGE_REPOSITORY
+                name: ihotraco-configmap
+          - name: SPRING_DATA_MONGODB_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_DATA_MONGODB_HOST
+                name: ihotraco-configmap
+          - name: target_url
+            valueFrom:
+              configMapKeyRef:
+                name: ihotraco-configmap
+                key: target_url
+          - name: SERVER_URL
+            value: "https://$(target_url)"
+          - name: java_profiles
+            valueFrom:
+              configMapKeyRef:
+                name: ihotraco-configmap
+                key: java_profiles
+          - name: SPRING_PROFILES_ACTIVE
+            value: "$(java_profiles)"
+          - name: MQTT_HOSTNAME
+            valueFrom:
+              configMapKeyRef:
+                key: MQTT_HOSTNAME
+                name: ihotraco-configmap
+          - name: CASSANDRA_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: CASSANDRA_PORT
+                name: ihotraco-configmap
+          - name: CASSANDRA_HOSTNAME
+            valueFrom:
+              configMapKeyRef:
+                key: CASSANDRA_HOSTNAME
+                name: ihotraco-configmap
+        resources: 
+            limits:
+              cpu: 200m
+              memory: 500Mi
+            requests: 
+              cpu: 100m
+              memory: 400Mi
+      volumes:
+      - name: mongo-user
+        secret:
+          secretName: mongo-user
+      - name: mongo-user-passwd
+        secret:
+          secretName: mongo-user-passwd
+      - name: cassandra-username
+        secret:
+          secretName: cassandra-username
+      - name: cassandra-password
+        secret:
+          secretName: cassandra-password
+      - name: shutdown-secret
+        secret:
+          secretName: shutdown-secret
+      - name: device-gateway-mqtt
+        secret:
+          secretName: device-gateway-mqtt
+      imagePullSecrets:
+      - name: nexus-secrets
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+status: {}

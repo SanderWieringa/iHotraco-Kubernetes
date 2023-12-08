@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: device-gateway-mqtt
+type: Opaque
+data:
+  device-gateway-mqtt: |
+    <VALUE>
+    
