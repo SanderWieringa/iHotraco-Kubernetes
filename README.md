@@ -4,16 +4,16 @@ This README documents whatever steps are necessary to get your application up an
 
 ### What is this repository for? ###
 
-* [Minimum hardware requirements](#markdown-header-minimum-hardware-requirements)
-* [Recommended hardware requirements](#markdown-header-recommended-hardware-requirements)
-* [Used versions](#markdown-header-used-versions)
-* [Install Kubeadm](#markdown-header-install-kubeadm)
-* [Install cluster on Kubeadm](#markdown-header-install-cluster-on-kubeadm)
-* [Install load balancer and ingress](#markdown-header-install-load-balancer-and-ingress)
-* [Install horizontal pod autoscaler](#markdown-header-install-horizontal-pod-autoscaler)
-* [Kubernetes commands](#markdown-header-kubernetes-commands)
-* [Miscellaneous](#markdown-header-miscellaneous)
-* [References](#markdown-header-references)
+* [Minimum hardware requirements](#minimum-hardware-requirements)
+* [Recommended hardware requirements](#recommended-hardware-requirements)
+* [Used versions](#used-versions)
+* [Install Kubeadm](#install-kubeadm)
+* [Install cluster on Kubeadm](#install-cluster-on-kubeadm)
+* [Install load balancer and ingress](#install-load-balancer-and-ingress)
+* [Install horizontal pod autoscaler](#install-horizontal-pod-autoscaler)
+* [Kubernetes commands](#kubernetes-commands)
+* [Miscellaneous](#miscellaneous)
+* [References](#references)
 
 ### How do I get set up? ###
 
@@ -49,6 +49,8 @@ Kubeadm v1.28.2
 To install Kubeadm on Ubuntu and a Kubernetes cluster on a master node that can run pods, follow these steps.
 
 Keep in mind that sudo- or root-rights are required to perform these actions.
+
+    sudo su -
 
 **Step 1: Update your system**
 
