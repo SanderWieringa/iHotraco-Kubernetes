@@ -56,33 +56,54 @@ Keep in mind that sudo- or root-rights are required to perform these actions.
 
 Make sure your system is up-to-date by executing the following:
 
-    sudo apt update
-    sudo apt upgrade
+    apt update
+    apt upgrade
 
-**Step 2: Install Docker**
+**Step 2: Install Containerd**
 
-Kubernetes needs a container-runtime, Docker is a much used option. Install Docker by runing the following:
+Kubernetes needs a container-runtime, Containerd is a much used option. Install Containerd by downloading the compressed archive for Containerd and extract it by running the following:
 
-    sudo apt install docker.io
+    wget https://github.com/containerd/containerd/releases/download/v1.6.2/containerd-1.6.2-linux-amd64.tar.gz
 
-Start and activate the Docker-service:
+    tar Czxvf /usr/local containerd-1.6.2-linux-amd64.tar.gz
 
-    sudo systemctl start docker
-    sudo systemctl enable docker
+Download the Containerd service file and move it to the expected directory by running the following:
+
+    wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+
+    mv containerd.service /usr/lib/systemd/system/
+
+Reload the systemd manager to notify it about the newly created service, then enable and start it by running the following commands:
+
+    systemctl daemon-reload
+
+    systemctl enable --now containerd
+
+    systemctl status containerd
+
+Next, generate the default Containerd configuration and save it to a file. We want to set SystemdCgroup to "true" to configure Containerd to use systemd cgroups for managing containers. Run the following commands:
+
+    mkdir -p /etc/containerd/
+
+    containerd config default | sudo tee /etc/containerd/config.toml
+
+    sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+
+    systemctl restart containerd
 
 **Step 3: Install kubeadm, kubelet and kubectl**
 
 Install the Kubernetes-components using the following commands:
 
-    sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+    apt-get update && sudo apt-get install -y apt-transport-https curl
 
     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 
     echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
-    sudo apt update
+    apt update
 
-    sudo apt install -y kubeadm kubelet kubectl
+    apt install -y kubeadm kubelet kubectl
 
 **Step 4: Initialise the master node**
 
@@ -90,11 +111,11 @@ On the master node run kubeadm init to initialise the Kubernetes control plane. 
 
 (Recommended) If you have plans to upgrade this singular control-plane Kubeadm-cluster to High Availability (HA), you should specify --control-plane-endpoint to configure an endpoint for all control-plane nodes. Such an endpoint can be a DNS-name or an IP-address of a loadbalancer.
 
-    sudo swapoff -a
+    swapoff -a
 
 __Calico:__
 
-    sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --control-plane-endpoint=<IP> --upload-certs
+    kubeadm init --pod-network-cidr=192.168.0.0/16 --control-plane-endpoint=<IP> --upload-certs
 
 After the initialisation process is completed, the output will give a command to run on your regular user account to configure kubectl for use on a new cluster. This will look like this:
 
@@ -113,22 +134,44 @@ To run pods, you need a network solution. If you have specified a --pod-network-
     curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/calico.yaml -O
     kubectl apply -f calico.yaml
 
-**Step 6: Add a worker node (optional)**
+**Step 6: Install Docker(Optional)**
+
+If after initialising Kubeadm the following error gets thrown:
+
+    [ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables does not exist
+
+	[ERROR FileContent--proc-sys-net-ipv4-ip_forward]: /proc/sys/net/ipv4/ip_forward contents are not set to 1
+
+Try running the following commands:
+
+    modprobe br_netfilter
+    echo '1' > /proc/sys/net/ipv4/ip_forward
+
+If one error still remains or if you want to run a local image registry in a container, run the following commands:
+
+    sudo apt install docker.io
+
+    sudo systemctl start docker
+
+    sudo systemctl enable docker
+
+
+**Step 7: Add a worker node (optional)**
 
 When you want to add worker nodes to the cluster, you can run the kubeadm join command with the token that is given in the output of running kubeadm init on the master node.
 
-    sudo Kubeadm token generate
+    sudo kubeadm token generate
     sudo kubeadm token create <your_token> --print-join-command
 
 The next command is then given to join a worker node to the master node:
 
     sudo kubeadm join <your_master_node_ip>:6443 --token <your_token> --discovery-token-ca-cert-hash sha256:<your_ca_cert_hash>
 
-**Step 7: Add master node / control plane (optional)**
+**Step 8: Add master node / control plane (optional)**
 
     sudo kubeadm join <your_master_node_ip>:6443 --token <your_token> --control-plane --discovery-token-ca-cert-hash sha256:<your_ca_cert_hash>
 
-**Step 8: Check the status of the cluster**
+**Step 9: Check the status of the cluster**
 
 You can check the status of the cluster by running the following command:
 
@@ -172,6 +215,12 @@ Define YAML file for a Deployment. For instance:
 [Deployment YAML file](ExampleYamlFiles/deployment.yaml)
 
   kubectl apply -f deployment.yaml
+
+If pulling images from Nexus within Kubernetes still does not work, go to "Install Kubeadm" step 6 and install Docker to be able to run a local image registry in a container with this command:
+
+    docker run -d -p 5000:5000 --restart always --name registry registry:2
+
+You can now push images to this registry and have Kubernetes pull from this registry instead of Nexus.
 
 **Step 3: Deploy service**
 
