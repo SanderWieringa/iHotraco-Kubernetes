@@ -38,7 +38,7 @@ Operating System: Ubuntu Server 18.04 or later
 
 
 # Used versions
-Ubuntu 20.04.6 LTS
+Ubuntu 22.04.6 LTS
 
 Kubeadm v1.28.2
 
